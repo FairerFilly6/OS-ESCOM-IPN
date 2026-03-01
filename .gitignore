@@ -1,6 +1,18 @@
-# Ejecutables compilados
-Practica 2/practica2_crea_archivos
+# Ejecutables Windows
+*.exe
+*.bat
+*.cmd
 
-# Por si compilas en otras carpetas
+# Ejecutables Linux / Unix
 *.out
+*.bin
+*.run
+
+# Archivos compilados comunes
 *.o
+*.so
+*.a
+
+# Binarios genéricos
+*.dll
+*.class
