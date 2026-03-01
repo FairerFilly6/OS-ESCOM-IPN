@@ -1,0 +1,6 @@
+# Ejecutables compilados
+Practica 2/practica2_crea_archivos
+
+# Por si compilas en otras carpetas
+*.out
+*.o
