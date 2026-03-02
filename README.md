@@ -7,7 +7,7 @@
 [![Subject](https://img.shields.io/badge/Subject-Operating%20Systems-2E8B57?style=for-the-badge)](https://github.com/FairerFilly6/OS-ESCOM-IPN)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)]()
 
-<p><em>Practical exercises and projects developed for the Operating Systems course at ESCOM – IPN, Computational Sciences.</em></p>
+<p><em>Practical exercises and projects developed for the Operating Systems course at ESCOM – IPN, Computational Systems.</em></p>
 
 </div>
 
