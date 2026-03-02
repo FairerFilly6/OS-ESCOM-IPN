@@ -90,11 +90,14 @@ gcc -o program main.c
 
 > Computer Systems student at ESCOM – IPN  
 
-[![GitHub](https://img.shields.io/badge/GitHub-FairerFilly6-181717?style=flat-square&logo=github)](https://github.com/FairerFilly6)
+[![GitHub](https://img.shields.io/badge/GitHub-AlanRLG-181717?style=flat-square&logo=github)](https://github.com/AlanRLG)
 
 **Omar Barron**
 
 > Computer Systems student at ESCOM – IPN
+
+[![GitHub](https://img.shields.io/badge/GitHub-FairerFilly6-181717?style=flat-square&logo=github)](https://github.com/FairerFilly6)
+
 ---
 
 ## 📄 License
