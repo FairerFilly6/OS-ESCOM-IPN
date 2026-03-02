@@ -1,19 +1,7 @@
-# Ejecutables Windows
-*.exe
-*.bat
-*.cmd
-
-# Ejecutables Linux / Unix
-*.out
-*.bin
-*.run
-
-# Archivos compilados comunes
-*.o
-*.so
-*.a
-
-# Binarios genéricos
-*.dll
-*.class
-Practica 2/practica2_crea_archivos
+Practica 2/*
+!Practica 2/*.c
+!Practica 2/*.h
+!Practica 2/Makefile
+!Practica 2/*.md
+!Practica 2/*.txt
+!Practica 2/*.sh

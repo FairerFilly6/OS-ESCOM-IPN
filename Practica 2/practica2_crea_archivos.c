@@ -2,10 +2,10 @@
  #include <stdlib.h>
  #include <string.h>
  #include <time.h>
- #include <fcntl.h>       /* open, O_WRONLY, O_CREAT, O_TRUNC */
- #include <unistd.h>      /* write, close, access              */
- #include <sys/stat.h>    /* mkdir                             */
- #include <sys/types.h>
+ #include <fcntl.h>       // open, O_WRONLY, O_CREAT, O_TRUNC
+ #include <unistd.h>      // write, close, access             
+ #include <sys/stat.h>    // mkdir                            
+ #include <sys/types.h>   // tipos de datos del sistema
  
  #define MAX_ARCHIVOS  8
  #define NOMBRE_LEN    64
@@ -118,18 +118,18 @@ elige un contenido al azar del arreglo y llama a crear_archivo() por cada uno
  {
      if (argc != 2) {
          printf("Uso: %s <ruta_directorio>\n", argv[0]);
-         return EXIT_FAILURE;
+         return -1;
      }
  
      const char *ruta = argv[1];
  
-     if (verificar_directorio(ruta) == -1)  return EXIT_FAILURE;
-     if (crear_directorio(ruta)     == -1)  return EXIT_FAILURE;
+     if (verificar_directorio(ruta) == -1)  return -1;
+     if (crear_directorio(ruta)     == -1)  return -1;
  
      srand((unsigned int)time(NULL));
  
      crear_archivos_aleatorios(ruta);
  
      printf("\nTodos los archivos fueron creados en '%s'.\n", ruta);
-     return EXIT_SUCCESS;
+     return 0;
  }
