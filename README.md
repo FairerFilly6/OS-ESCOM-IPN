@@ -15,7 +15,7 @@
 
 ## 📌 About
 
-This repository contains hands-on programming assignments from the **Operating Systems** course at [ESCOM – IPN](https://www.escom.ipn.mx/) (Escuela Superior de Cómputo, Instituto Politécnico Nacional), Bachelor's Degree in Computer Science.
+This repository contains hands-on programming assignments from the **Operating Systems** course at [ESCOM – IPN](https://www.escom.ipn.mx/) (Escuela Superior de Cómputo, Instituto Politécnico Nacional), Bachelor's Degree in Computer Systems.
 
 The exercises cover fundamental OS concepts implemented in **C**, focusing on system-level programming, process management, and file I/O.
 
@@ -90,7 +90,7 @@ gcc -o program main.c
 
 > Computer Systems student at ESCOM – IPN  
 
-[![GitHub](https://img.shields.io/badge/GitHub-AlanRLG-181717?style=flat-square&logo=github)](https://github.com/AlanRLG)
+[![GitHub](https://img.shields.io/badge/GitHub-FairerFilly6-181717?style=flat-square&logo=github)](https://github.com/FairerFilly6)
 
 **Omar Barron**
 
@@ -100,7 +100,7 @@ gcc -o program main.c
 ## 📄 License
 
 This repository is for **educational purposes**. Feel free to use it as reference for learning.
-
+[![GitHub](https://img.shields.io/badge/GitHub--181717?style=flat-square&logo=github)](https://github.com/AlanRLG)
 ---
 
 <div align="center">
