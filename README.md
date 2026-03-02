@@ -107,5 +107,5 @@ This repository is for **educational purposes**. Feel free to use it as referenc
 ---
 
 <div align="center">
-  <sub>Made with 💻 at ESCOM – IPN · Computational Sciences</sub>
+  <sub>Made with 💻 at ESCOM – IPN · Computational Systems</sub>
 </div>
