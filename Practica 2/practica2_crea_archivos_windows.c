@@ -74,24 +74,24 @@ Retorna -1 si open() falló
         GENERIC_WRITE,
         0,
         NULL,
-        CREATE_NEW,
+        CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL,
         NULL
      );
      
+     
     if (hfile == INVALID_HANDLE_VALUE) {
-        printf("No existe o no se puede abrir\n");
-    } else {
-        printf("Existe\n");
-        CloseHandle(hfile);
+        printf("Error al crear el archivo\n");
+        return -1;
     }
+
     DWORD bytesEscritos;
 
      //write(): escribe el contenido
-     WriteFile(hfile, contenido, strlen(contenido), &bytesEscritos, NULL);
+    WriteFile(hfile, contenido, strlen(contenido), &bytesEscritos, NULL);
  
      //close(): libera el descriptor
-     CloseHandle(hfile);
+    CloseHandle(hfile);
  
      return 0;
  }
