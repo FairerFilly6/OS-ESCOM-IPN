@@ -5,3 +5,5 @@ Practica 2/*
 !Practica 2/*.md
 !Practica 2/*.txt
 !Practica 2/*.sh
+Practica3/*
+!Practica3/*.asm
