@@ -1,8 +1,9 @@
 #!/bin/bash
 
 segundo=$(date +%S)
-intentos=0
+intentos=1
 numero=$((segundo % 10 + 1))
+echo "Numero a adivinar"
 echo $numero
 
 echo "Adivina el número del 1 al 10:"
