@@ -28,6 +28,42 @@ void imprimirMatrizFloat(float matrix[][SIZEM], int matrixSize){
     
 }
 
+void escribirMatrizArchivo(FILE *file,
+                           char titulo[],
+                           int matrix[][SIZEM],
+                           int matrixSize)
+{
+    fprintf(file, "\n%s\n", titulo);
+
+    for(int i = 0; i < matrixSize; i++)
+    {
+        for(int j = 0; j < matrixSize; j++)
+        {
+            fprintf(file, "%d ", matrix[i][j]);
+        }
+
+        fprintf(file, "\n");
+    }
+}
+
+void escribirMatrizArchivoFloat(FILE *file,
+                           char titulo[],
+                           float matrix[][SIZEM],
+                           int matrixSize)
+{
+    fprintf(file, "\n%s\n", titulo);
+
+    for(int i = 0; i < matrixSize; i++)
+    {
+        for(int j = 0; j < matrixSize; j++)
+        {
+            fprintf(file, "%f ", matrix[i][j]);
+        }
+
+        fprintf(file, "\n");
+    }
+}
+
 void matrixSum (int matrixA[][SIZEM], int matrixB[][SIZEM], int result[][SIZEM], int matrixSize ){
     for (int i = 0; i < matrixSize; i++)
     {
@@ -208,30 +244,51 @@ void iniciarProcesos(){
 
     float inversa[SIZEM][SIZEM]; 
 
+
+    FILE *archivo = fopen("resultado.txt", "w");
+
+    if(archivo == NULL)
+    {
+        printf("Error al abrir archivo\n");
+        return ;
+    }
+
     printf("\nMatriz A\n");
     imprimirMatriz(matrixA, SIZEM);
+    escribirMatrizArchivo(archivo,"\nMatriz A\n",matrixA, SIZEM);
     printf("\nMatriz B\n");
     imprimirMatriz(matrixB, SIZEM);
+    escribirMatrizArchivo(archivo,"\nMatriz B\n",matrixB, SIZEM);
 
     printf("\nSuma de matrices\n");
     matrixSum(matrixA, matrixB, result, SIZEM);
 
     imprimirMatriz(result, SIZEM);
+    escribirMatrizArchivo(archivo,"\nSuma de matrices\n",result, SIZEM);
 
     printf("\nResta de matrices\n");
     matrixSubs(matrixA, matrixB, result, SIZEM);
 
     imprimirMatriz(result, SIZEM);
+    escribirMatrizArchivo(archivo,"\nResta de matrices\n",result, SIZEM);
 
     printf("\nMultiplicacion de matrices\n");
     matrixMult(matrixA,matrixB,result,SIZEM);
 
     imprimirMatriz(result, SIZEM);
+    escribirMatrizArchivo(archivo,"\nMultiplicacion de matrices\n",result, SIZEM);
 
     printf("\nTraspuesta de matriz A\n");
     obtenerTraspuesta(matrixA, traspuesta, SIZEM);
 
     imprimirMatriz(traspuesta, SIZEM);
+    escribirMatrizArchivo(archivo,"\nTraspuesta de matriz A\n",traspuesta, SIZEM);
+
+    printf("\nTraspuesta de matriz B\n");
+    obtenerTraspuesta(matrixB, traspuesta, SIZEM);
+
+    imprimirMatriz(traspuesta, SIZEM);
+    escribirMatrizArchivo(archivo,"\nTraspuesta de matriz A\n",traspuesta, SIZEM);
 
     
     float det = determinante(matrixA, SIZEM);
@@ -241,8 +298,14 @@ void iniciarProcesos(){
     printf("\nInversa de matriz A\n");
     obtenerInversa(matrixA, inversa, SIZEM );
     imprimirMatrizFloat(inversa,SIZEM );
-    
+    escribirMatrizArchivoFloat(archivo,"\nInversa de matriz A\n",inversa, SIZEM);
 
+    printf("\nInversa de matriz B\n");
+    obtenerInversa(matrixB, inversa, SIZEM );
+    imprimirMatrizFloat(inversa,SIZEM );
+    escribirMatrizArchivoFloat(archivo,"\nInversa de matriz B\n",inversa, SIZEM);
+    
+    fclose(archivo);
 
 }
 
