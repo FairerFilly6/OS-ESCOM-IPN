@@ -1,0 +1,176 @@
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N 10
+
+int A[N][N], B[N][N], R[N][N];
+
+void imprimirMatriz(int M[N][N], const char *nombre)
+{
+    int i, j;
+
+    printf("\nMatriz %s:\n", nombre);
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            printf("%4d", M[i][j]);
+        }
+
+        printf("\n");
+    }
+}
+
+void llenarMatrices()
+{
+    int i, j;
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            A[i][j] = rand() % 10;
+            B[i][j] = rand() % 10;
+        }
+    }
+}
+
+void imprimirResultado(const char *nombre)
+{
+    int i, j;
+
+    printf("\nResultado de %s:\n", nombre);
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            printf("%6d", R[i][j]);
+        }
+
+        printf("\n");
+    }
+}
+
+void suma()
+{
+    int i, j;
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            R[i][j] = A[i][j] + B[i][j];
+        }
+    }
+
+    imprimirResultado("SUMA");
+}
+
+void resta()
+{
+    int i, j;
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            R[i][j] = A[i][j] - B[i][j];
+        }
+    }
+
+    imprimirResultado("RESTA");
+}
+
+void multiplicacion()
+{
+    int i, j, k;
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            R[i][j] = 0;
+
+            for(k = 0; k < N; k++)
+            {
+                R[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+
+    imprimirResultado("MULTIPLICACION");
+}
+
+void transpuesta()
+{
+    int i, j;
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            R[i][j] = A[j][i];
+        }
+    }
+
+    imprimirResultado("TRANSPUESTA");
+}
+
+void inversa()
+{
+    int i, j;
+    float det = 0;
+
+    for(i = 0; i < N; i++)
+    {
+        det += A[i][i];
+    }
+
+    printf("\nResultado de INVERSA APROXIMADA:\n");
+
+    if(det == 0)
+    {
+        printf("La matriz no tiene inversa.\n");
+        return;
+    }
+
+    for(i = 0; i < N; i++)
+    {
+        for(j = 0; j < N; j++)
+        {
+            printf("%8.3f", (float)A[i][j] / det);
+        }
+
+        printf("\n");
+    }
+}
+
+int main()
+{
+    LARGE_INTEGER inicio, fin, frecuencia;
+
+    QueryPerformanceFrequency(&frecuencia);
+    QueryPerformanceCounter(&inicio);
+
+    llenarMatrices();
+
+    imprimirMatriz(A, "A");
+    imprimirMatriz(B, "B");
+
+    suma();
+    resta();
+    multiplicacion();
+    transpuesta();
+    inversa();
+
+    QueryPerformanceCounter(&fin);
+
+    double tiempo = (double)(fin.QuadPart - inicio.QuadPart) / frecuencia.QuadPart;
+
+    printf("\nTiempo de ejecucion: %f segundos\n", tiempo);
+
+    return 0;
+}
