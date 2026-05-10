@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define SIZEM 10
 
@@ -367,7 +368,19 @@ void iniciarProcesos(){
 }
 
 int main(int argc, char const *argv[])
-{
+{   
+    struct timespec inicio, fin;
+
+    clock_gettime(CLOCK_REALTIME, &inicio);
+
     iniciarProcesos();
+
+    clock_gettime(CLOCK_REALTIME, &fin);
+
+    double tiempo =
+        (fin.tv_sec - inicio.tv_sec) +
+        (fin.tv_nsec - inicio.tv_nsec) / 1e9;
+
+    printf("\nTiempo de ejecucion: %.9f segundos\n", tiempo);
     return 0;
 }
