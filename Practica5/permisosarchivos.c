@@ -74,38 +74,39 @@ void mostrar_permisos(mode_t mode)
 
 
 
- int main(int argc, char const *argv[])
- {
-    char const *permisos ;
+int main(int argc, char const *argv[])
+{
+    char directorio[512];
+    char archivo[256];
+    char permisosStr[10];
 
-    if (argc != 4) {
-        printf("Uso: %s <directorio> <archivo> <permisosOctal> \n", argv[0]);
-        return 1;
-    }
+    printf("Ingrese el directorio: ");
+    scanf("%s", directorio);
 
-    DIR *dir = opendir(argv[1]);
-    DIR *archivo = opendir(argv[2]);
-    permisos = argv[3];
+    printf("Ingrese el nombre del archivo: ");
+    scanf("%s", archivo);
+
+    printf("Ingrese los permisos en octal (ejemplo: 755): ");
+    scanf("%s", permisosStr);
+
+    DIR *dir = opendir(directorio);
 
     if (!dir) {
         perror("opendir");
         return 1;
     }
-    //declaracion de los elementos principales del struct
-    struct dirent *entry;   //datos del archivo (nombre)
-    struct stat info;       //info del archivo (permisos)
+
+    struct dirent *entry;
+    struct stat info;
     char ruta[512];
     int contador = 1;
-    
-    //readdir lee el directorio y retorna un struct dirent
+
     while ((entry = readdir(dir)) != NULL) {
-        //entry->d_name es el nombre del archivo 
         if (strcmp(entry->d_name, ".") == 0 ||
             strcmp(entry->d_name, "..") == 0)
             continue;
-        //impresion de la ruta
-        snprintf(ruta, sizeof(ruta), "%s/%s", argv[1], entry->d_name);
-        printf("\nArchivo %d: %s \n", contador,entry->d_name );
+        snprintf(ruta, sizeof(ruta), "%s/%s", directorio, entry->d_name);
+        printf("\nArchivo %d: %s \n", contador, entry->d_name);
 
         if (stat(ruta, &info) == -1) {
             perror("stat");
@@ -118,34 +119,29 @@ void mostrar_permisos(mode_t mode)
         printf(" %s\n", entry->d_name);
     }
 
-    //se habilitan los nuevos permisos, se pasa de string a octal
-    mode_t nuevosPermisos = strtol(argv[3], NULL, 8);
-    snprintf(ruta, sizeof(ruta), "%s/%s", argv[1], argv[2]);
+    mode_t nuevosPermisos = strtol(permisosStr, NULL, 8);
+    snprintf(ruta, sizeof(ruta), "%s/%s", directorio, archivo);
 
-    int res = modificarPermisos(ruta,nuevosPermisos);
+    int res = modificarPermisos(ruta, nuevosPermisos);
 
-    if (res == 1)
-    {   
+    if (res == 1) {
         printf("Hubo un error...\n");
         perror("chmod");
-    }else{
+    } else {
         printf("\n******************************\n");
         printf("Permisos de archivo modificados!");
         printf("\n******************************\n");
-     }
-    
-     rewinddir(dir);
+    }
 
-     contador = 1;
+    rewinddir(dir);
+    contador = 1;
 
     while ((entry = readdir(dir)) != NULL) {
-        //entry->d_name es el nombre del archivo 
         if (strcmp(entry->d_name, ".") == 0 ||
             strcmp(entry->d_name, "..") == 0)
             continue;
-        //impresion de la ruta
-        snprintf(ruta, sizeof(ruta), "%s/%s", argv[1], entry->d_name);
-        printf("\nArchivo %d: %s \n", contador,entry->d_name );
+        snprintf(ruta, sizeof(ruta), "%s/%s", directorio, entry->d_name);
+        printf("\nArchivo %d: %s \n", contador, entry->d_name);
 
         if (stat(ruta, &info) == -1) {
             perror("stat");
@@ -158,15 +154,6 @@ void mostrar_permisos(mode_t mode)
         printf(" %s\n", entry->d_name);
     }
 
-
-
-
-
-
     closedir(dir);
-    
-
-
     return 0;
- }
- 
+}
