@@ -5,3 +5,6 @@ Practica3/*
 !Practica3/*.asm
 !Practica4/*
 Practica4/prueba
+!Practica5/*.c
+!Practica5/*.h
+!Practica6/*.c
