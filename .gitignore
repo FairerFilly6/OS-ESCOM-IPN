@@ -5,6 +5,18 @@ Practica3/*
 !Practica3/*.asm
 !Practica4/*
 Practica4/prueba
-!Practica5/*.c
-!Practica5/*.h
+# Ignorar todo dentro de Practica5
+Practica5/**
+
+# Permitir recorrer directorios
+!Practica5/**/
+
+# Permitir .c y .h
+!Practica5/**/*.c
+!Practica5/**/*.h
+
+
+Practica6/*
 !Practica6/*.c
+!Practica6/*.h
+
