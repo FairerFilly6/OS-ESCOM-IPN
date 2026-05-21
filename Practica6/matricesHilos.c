@@ -3,8 +3,23 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
 
 #define SIZEM 10
+
+typedef struct {
+    int (*matrixA)[SIZEM];
+    int (*matrixB)[SIZEM];
+    int (*result)[SIZEM];
+    int matrixSize;
+} DatosInt;
+
+typedef struct {
+    int (*matrixA)[SIZEM];
+    int (*matrixB)[SIZEM];
+    float (*result)[SIZEM];
+    int matrixSize;
+} DatosFLoat;
 
 void imprimirMatriz(int matrix[][SIZEM], int matrixSize){
     
@@ -221,110 +236,81 @@ int obtenerInversa(int matrix[][SIZEM],
     return 1;
 }
 
+void* hiloSuma(void *arg   ){
+    DatosInt *datos = (DatosInt *) arg;
+    int (*matrixA)[SIZEM] = datos->matrixA ;
+    int (*matrixB)[SIZEM] = datos->matrixB;
+    int (*result)[SIZEM] = datos->result;
+    int matrixSize = datos->matrixSize;
 
-void iniciarProcesos(){
+    matrixSum(matrixA, matrixB, result, SIZEM);
+    FILE *f = fopen("suma.txt", "w");
+    escribirMatrizArchivo(f, "SUMA", result, SIZEM);
+    fclose(f);
+    pthread_exit(NULL); 
+}
 
-    int matrixA[SIZEM][SIZEM] = {   {1,0,0,0,0,0,0,0,0,0}, 
-                                    {0,2,0,0,0,0,0,0,0,0},
-                                    {0,0,3,0,0,0,0,0,0,0}, 
-                                    {0,0,0,4,0,0,0,0,0,0},
-                                    {0,0,0,0,5,0,0,0,0,0}, 
-                                    {0,0,0,0,0,6,0,0,0,0},
-                                    {0,0,0,0,0,0,7,0,0,0}, 
-                                    {0,0,0,0,0,0,0,8,0,0},
-                                    {0,0,0,0,0,0,0,0,9,0}, 
-                                    {0,0,0,0,0,0,0,0,0,10}
-                                }; 
-
-    int matrixB[SIZEM][SIZEM] = {   {1,0,0,0,0,0,0,0,0,0}, 
-                                    {0,2,0,0,0,0,0,0,0,0},
-                                    {0,0,3,0,0,0,0,0,0,0}, 
-                                    {0,0,0,4,0,0,0,0,0,0},
-                                    {0,0,0,0,5,0,0,0,0,0}, 
-                                    {0,0,0,0,0,6,0,0,0,0},
-                                    {0,0,0,0,0,0,7,0,0,0}, 
-                                    {0,0,0,0,0,0,0,8,0,0},
-                                    {0,0,0,0,0,0,0,0,9,0}, 
-                                    {0,0,0,0,0,0,0,0,0,10}
-                                }; 
+void* hiloResta(void *arg  ){
     
+    DatosInt *datos = (DatosInt *) arg;
+    int (*matrixA)[SIZEM] = datos->matrixA ;
+    int (*matrixB)[SIZEM] = datos->matrixB;
+    int (*result)[SIZEM] = datos->result;
+    int matrixSize = datos->matrixSize;
+
+    matrixSubs(matrixA, matrixB, result, SIZEM);
+    FILE *f = fopen("resta.txt", "w");
+    escribirMatrizArchivo(f, "Resta", result, SIZEM);
+    fclose(f);
+    pthread_exit(NULL); 
+}
+void* hiloMult(void *arg  ){
+    DatosInt *datos = (DatosInt *) arg;
+    int (*matrixA)[SIZEM] = datos->matrixA ;
+    int (*matrixB)[SIZEM] = datos->matrixB;
+    int (*result)[SIZEM] = datos->result;
+    int matrixSize = datos->matrixSize;
+    matrixMult(matrixA, matrixB, result, SIZEM);
+    FILE *f = fopen("multiplicacion.txt", "w");
+    escribirMatrizArchivo(f, "Multiplicacion", result, SIZEM);
+    fclose(f);
+    pthread_exit(NULL);
+}
+
+void* hiloTraspuesta(void *arg  ){
+    DatosInt *datos = (DatosInt *) arg;
+    int (*matrixA)[SIZEM] = datos->matrixA ;
+    int (*matrixB)[SIZEM] = datos->matrixB;
+    int (*result)[SIZEM] = datos->result;
+    int matrixSize = datos->matrixSize;
+    matrixMult(matrixA, matrixB, result, SIZEM);
+    FILE *f = fopen("traspuesta.txt", "w");
+    obtenerTraspuesta(matrixA,result,SIZEM);
+    escribirMatrizArchivo(f, "Traspuesta de A", result, SIZEM);
+    obtenerTraspuesta(matrixB,result,SIZEM);
+    escribirMatrizArchivo(f, "Traspuesta de B", result, SIZEM);
+    fclose(f);
+    pthread_exit(NULL);
+}
+
+void* hiloInversa(void *arg  ){
+    DatosFLoat *datos = (DatosFLoat *) arg;
+    int (*matrixA)[SIZEM] = datos->matrixA ;
+    int (*matrixB)[SIZEM] = datos->matrixB;
+    float (*inversa)[SIZEM] = datos->result;
+    int matrixSize = datos->matrixSize;
+     FILE *f = fopen("inversa.txt", "w");
+    obtenerInversa(matrixA,inversa,SIZEM);
+    escribirMatrizArchivoFloat(f, "Inversa de A", inversa, SIZEM);
+    obtenerInversa(matrixB,inversa,SIZEM);
+    escribirMatrizArchivoFloat(f, "Inversa de B", inversa, SIZEM);
+    fclose(f);
+    pthread_exit(NULL);
+}
+
+void* hiloImpresion(void *arg ){
     
-    int result[SIZEM][SIZEM]; 
-
-    int traspuesta[SIZEM][SIZEM]; 
-
-    float inversa[SIZEM][SIZEM]; 
-
-    pid_t pid;
-
-    // suma
-    pid = fork();
-    if (pid == 0) {
-        
-        matrixSum(matrixA, matrixB, result, SIZEM);
-        FILE *f = fopen("suma.txt", "w");
-        escribirMatrizArchivo(f, "SUMA", result, SIZEM);
-        fclose(f);
-        exit(0);  
-    }
-
-    // resta
-    pid = fork();
-    if (pid == 0) {
-        
-        matrixSubs(matrixA, matrixB, result, SIZEM);
-        FILE *f = fopen("resta.txt", "w");
-        escribirMatrizArchivo(f, "Resta", result, SIZEM);
-        fclose(f);
-        exit(0);  
-    }
-
-    // multiplicacion
-    pid = fork();
-    if (pid == 0) {
-        
-        matrixMult(matrixA, matrixB, result, SIZEM);
-        FILE *f = fopen("multiplicacion.txt", "w");
-        escribirMatrizArchivo(f, "Multiplicacion", result, SIZEM);
-        fclose(f);
-        exit(0); 
-    }
-
-    // traspuestas
-    pid = fork();
-    if (pid == 0) {
-        
-        FILE *f = fopen("traspuesta.txt", "w");
-        obtenerTraspuesta(matrixA,result,SIZEM);
-        escribirMatrizArchivo(f, "Traspuesta de A", result, SIZEM);
-        obtenerTraspuesta(matrixB,result,SIZEM);
-        escribirMatrizArchivo(f, "Traspuesta de B", result, SIZEM);
-        fclose(f);
-        exit(0); 
-    }
-
-    // inversas
-    pid = fork();
-    if (pid == 0) {
-        
-        FILE *f = fopen("inversa.txt", "w");
-        obtenerInversa(matrixA,inversa,SIZEM);
-        escribirMatrizArchivoFloat(f, "Inversa de A", inversa, SIZEM);
-        obtenerInversa(matrixB,inversa,SIZEM);
-        escribirMatrizArchivoFloat(f, "Inversa de B", inversa, SIZEM);
-        fclose(f);
-        exit(0); 
-    }
-
-    for (int i = 0; i < 5; i++) {
-        wait(NULL);
-    }
-
-    // --- Proceso 6: Leer y mostrar archivos ---
-    pid = fork();
-    if (pid == 0) {
-
-        // Archivos fuente
+    // Archivos fuente
         const char *archivos[] = {
             "suma.txt",
             "resta.txt",
@@ -360,10 +346,104 @@ void iniciarProcesos(){
         }
 
         fclose(resultado);
-        exit(0);
-    }
-    wait(NULL);
 
+    pthread_exit(NULL);
+}
+
+void iniciarProcesos(){
+
+    int matrixA[SIZEM][SIZEM] = {   {1,0,0,0,0,0,0,0,0,0}, 
+                                    {0,2,0,0,0,0,0,0,0,0},
+                                    {0,0,3,0,0,0,0,0,0,0}, 
+                                    {0,0,0,4,0,0,0,0,0,0},
+                                    {0,0,0,0,5,0,0,0,0,0}, 
+                                    {0,0,0,0,0,6,0,0,0,0},
+                                    {0,0,0,0,0,0,7,0,0,0}, 
+                                    {0,0,0,0,0,0,0,8,0,0},
+                                    {0,0,0,0,0,0,0,0,9,0}, 
+                                    {0,0,0,0,0,0,0,0,0,10}
+                                }; 
+
+    int matrixB[SIZEM][SIZEM] = {   {1,0,0,0,0,0,0,0,0,0}, 
+                                    {0,2,0,0,0,0,0,0,0,0},
+                                    {0,0,3,0,0,0,0,0,0,0}, 
+                                    {0,0,0,4,0,0,0,0,0,0},
+                                    {0,0,0,0,5,0,0,0,0,0}, 
+                                    {0,0,0,0,0,6,0,0,0,0},
+                                    {0,0,0,0,0,0,7,0,0,0}, 
+                                    {0,0,0,0,0,0,0,8,0,0},
+                                    {0,0,0,0,0,0,0,0,9,0}, 
+                                    {0,0,0,0,0,0,0,0,0,10}
+                                }; 
+    
+    
+    int result[SIZEM][SIZEM]; 
+
+    int traspuesta[SIZEM][SIZEM]; 
+
+    float inversa[SIZEM][SIZEM]; 
+
+
+    pthread_t idHiloSuma, idHiloResta, idHiloMult, idHiloTraspuesta, idHiloInversa, idHiloImp;
+
+    DatosInt datosSuma;
+    datosSuma.matrixA = matrixA;
+    datosSuma.matrixB = matrixB;
+    datosSuma.result = result;
+    datosSuma.matrixSize = SIZEM;
+
+    DatosInt datosResta;
+    datosResta.matrixA = matrixA;
+    datosResta.matrixB = matrixB;
+    datosResta.result = result;
+    datosResta.matrixSize = SIZEM;
+
+    DatosInt datosMult;
+    datosMult.matrixA = matrixA;
+    datosMult.matrixB = matrixB;
+    datosMult.result = result;
+    datosMult.matrixSize = SIZEM;
+
+    DatosInt datosTraspuesta;
+    datosTraspuesta.matrixA = matrixA;
+    datosTraspuesta.matrixB = matrixB;
+    datosTraspuesta.result = result;
+    datosTraspuesta.matrixSize = SIZEM;
+
+    DatosFLoat datosInversa;
+    datosInversa.matrixA = matrixA;
+    datosInversa.matrixB = matrixB;
+    datosInversa.result = inversa;
+    datosInversa.matrixSize = SIZEM;
+
+
+
+    pthread_create(&idHiloSuma, NULL, hiloSuma, &datosSuma);
+   
+
+    pthread_create(&idHiloResta, NULL, hiloResta, &datosResta);
+    
+
+    pthread_create(&idHiloMult, NULL, hiloMult, &datosMult);
+   
+
+    pthread_create(&idHiloTraspuesta, NULL, hiloTraspuesta, &datosTraspuesta);
+    
+
+    pthread_create(&idHiloInversa, NULL, hiloInversa, &datosInversa);
+    
+
+    pthread_join(idHiloSuma, NULL);
+    pthread_join(idHiloResta, NULL);
+    pthread_join(idHiloMult, NULL);
+    pthread_join(idHiloTraspuesta, NULL);
+    pthread_join(idHiloInversa, NULL);
+
+    pthread_create(&idHiloImp, NULL, hiloImpresion, NULL);
+    pthread_join(idHiloImp, NULL);
+
+   
+    
     return ;
 }
 
