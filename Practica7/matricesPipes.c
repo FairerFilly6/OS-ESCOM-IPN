@@ -382,8 +382,8 @@ void ejecutar(){
                                         {0,0,0,0,0,0,0,0,1,0}, 
                                         {0,0,0,0,0,0,0,0,0,2}
                                     };                             
-        float inversaMult[SIZEM][SIZEM];
-        float inversaRec[SIZEM][SIZEM]; 
+        float inversaMultRec[SIZEM][SIZEM];
+        float inversaSumaREc[SIZEM][SIZEM]; 
         
         //escritura de A y B a HIjo
 
@@ -393,20 +393,24 @@ void ejecutar(){
 
         //lectura de inversa de mult
 
-        read(pipeHA[0], inversaMult, sizeof(inversaMult));
+        read(pipeHA[0], inversaMultRec, sizeof(inversaMultRec));
 
         printf("Impresion desde app inversa multiplicacion\n");
-        imprimirMatrizFloat(inversaMult, SIZEM);
+        imprimirMatrizFloat(inversaMultRec, SIZEM);
 
         //lectura de inversa de suma
 
-        read(pipeNA[0], inversaRec, sizeof(inversaRec));
+        read(pipeNA[0], inversaSumaREc, sizeof(inversaSumaREc));
 
         printf("Impresion desde app inversa suma\n");
-        imprimirMatrizFloat(inversaRec, SIZEM);
+        imprimirMatrizFloat(inversaSumaREc, SIZEM);
         
+        FILE *archivo = fopen("resultadoPipes.txt", "w");
 
-
+        escribirMatrizArchivoFloat(archivo,"\nInversa de multiplicacion de matrices\n",inversaMultRec, SIZEM);
+        printf("Escribiendo matriz inversa de multiplicacion en archivo!\n");
+        escribirMatrizArchivoFloat(archivo,"\nInversa de suma de matrices\n",inversaSumaREc, SIZEM);
+        printf("Escribiendo matriz inversa de suma en archivo!\n");
 
         waitpid(ph, NULL, 0);
 
