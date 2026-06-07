@@ -19,3 +19,7 @@ Practica5/**
 !Practica6/**/*.c
 !Practica6/**/*.h
 
+!Practica7/**/
+!Practica7/**/*.c
+!Practica7/**/*.h
+
