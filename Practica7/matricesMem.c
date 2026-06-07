@@ -19,9 +19,6 @@ typedef struct {
     float inversaMult[SIZEM][SIZEM];
     float inversaSuma[SIZEM][SIZEM];
 
-    int listoAB;
-    int listoMult;
-    int listoSuma;
 } MatricesCompartidas;
 
 void imprimirMatriz(int matrix[][SIZEM], int matrixSize){
