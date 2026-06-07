@@ -382,7 +382,7 @@ void ejecutar(){
     escribirMatrizArchivoFloat(archivo,"\nInversa de suma de matrices\n",mtrxsCmps->inversaSuma, SIZEM);
     printf("Escribiendo matriz inversa de suma en archivo!\n");
 
-
+    fclose(archivo);
 
     //close de la shm
     shmdt(mtrxsCmps);
