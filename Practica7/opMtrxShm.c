@@ -385,6 +385,8 @@ void ejecutar(){
         printf("Escribiendo inversa de B en archivo!\n");
 
         fclose(archivo);
+        shmdt(mtrxsCmps);
+        shmctl(shmidMtrx, IPC_RMID, NULL);
 
 
         exit(0);
