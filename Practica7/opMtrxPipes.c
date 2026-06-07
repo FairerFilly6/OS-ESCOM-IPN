@@ -403,14 +403,6 @@ void ejecutar(){
         read(pipeInv[0], invBRec, sizeof(invBRec));
 
 
-        imprimirMatriz(sumaRec, SIZEM);
-        imprimirMatriz(restaRec, SIZEM);
-        imprimirMatriz(multRec, SIZEM);
-        imprimirMatriz(trasARec, SIZEM);
-        imprimirMatriz(trasBRec, SIZEM);
-        imprimirMatrizFloat(invARec, SIZEM);
-        imprimirMatrizFloat(invBRec, SIZEM);
-
         FILE *archivo = fopen("opMtrxPipes.txt", "w");
 
         escribirMatrizArchivo(archivo,"\nSuma de matrices\n",sumaRec, SIZEM);
@@ -468,6 +460,5 @@ int main(int argc, char const *argv[])
         (fin.tv_nsec - inicio.tv_nsec) / 1e9;
 
     printf("\nTiempo de ejecucion: %.9f segundos\n", tiempo);
-    return 0;
     return 0;
 }
