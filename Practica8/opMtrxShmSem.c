@@ -6,20 +6,30 @@
 #include <sys/ipc.h> 
 #include <sys/shm.h>
 #include <string.h>
+#include <sys/sem.h>
 
 #define SIZEM 10
 
-typedef struct {
-    
+
+typedef struct 
+{
     int suma[SIZEM][SIZEM];
     int resta[SIZEM][SIZEM];
     int multiplicacion[SIZEM][SIZEM];
+} MtrxsBin;
+
+typedef struct 
+{
     int traspuestaA[SIZEM][SIZEM];
     int traspuestaB[SIZEM][SIZEM];
     float inversaA[SIZEM][SIZEM];
     float inversaB[SIZEM][SIZEM];
+} MtrxsUn;
 
-} MatricesCompartidas;
+
+
+
+
 
 void imprimirMatriz(int matrix[][SIZEM], int matrixSize){
     
@@ -224,10 +234,38 @@ int obtenerInversa(int matrix[][SIZEM], float inversa[][SIZEM], int matrixSize)
     return 1;
 }
 
+void waitSem(int semid, int num)
+{
+    struct sembuf op;
+
+    op.sem_num = num;
+    op.sem_op = -1;
+    op.sem_flg = 0;
+
+    semop(semid, &op, 1);
+}
+
+void signalSem(int semid, int num)
+{
+    struct sembuf op;
+
+    op.sem_num = num;
+    op.sem_op = 1;
+    op.sem_flg = 0;
+
+    semop(semid, &op, 1);
+}
+
+
 
 
 void ejecutar(){
     pid_t ps, pr, pm, pt, pi, recolector;
+
+    //creacion de 5 semaforos para cada proceso
+    int semid;
+
+    semid = semget(IPC_PRIVATE, 5, IPC_CREAT | 0666 );
 
     int matrixA[SIZEM][SIZEM] = {   {1,0,0,0,0,0,0,0,0,0}, 
                                     {0,2,0,0,0,0,0,0,0,0},
@@ -253,18 +291,36 @@ void ejecutar(){
                                     {0,0,0,0,0,0,0,0,0,2}
                                 };  
                                 
-    int shmidMtrx;
-    MatricesCompartidas * mtrxsCmps;
+    int shmBin, shmUn;
+    MtrxsBin * mtrxsBin;
+    MtrxsUn * mtrxsUn;
     
     //Generar el puntero a la shm de matrices
-    shmidMtrx = shmget(IPC_PRIVATE, sizeof(MatricesCompartidas), IPC_CREAT | 0666);
-    mtrxsCmps = (MatricesCompartidas *) shmat(shmidMtrx, NULL, 0);
 
-    if(shmidMtrx == -1)
+    shmBin = shmget(IPC_PRIVATE, sizeof(MtrxsBin), IPC_CREAT | 0666);
+    mtrxsBin = (MtrxsBin *) shmat(shmBin, NULL, 0);
+
+    if(shmBin == -1)
     {
         perror("shmget");
         exit(1);
     }
+
+    shmUn = shmget(IPC_PRIVATE, sizeof(MtrxsUn), IPC_CREAT | 0666);
+    mtrxsUn = (MtrxsUn *) shmat(shmUn, NULL, 0);
+
+    if(shmUn == -1)
+    {
+        perror("shmget");
+        exit(1);
+    }
+
+    //inicializacion de los semaforos en 0 
+    semctl(semid, 0, SETVAL, 0); // suma
+    semctl(semid, 1, SETVAL, 0); // resta
+    semctl(semid, 2, SETVAL, 0); // mult
+    semctl(semid, 3, SETVAL, 0); // traspuesta
+    semctl(semid, 4, SETVAL, 0); // inversa
 
                                 
     recolector = fork();
@@ -275,11 +331,14 @@ void ejecutar(){
 
         if(ps == 0)
         {
+
+
             printf("SUMA\n");
             printf("Proceso %d Padre %d \n", getpid(), getppid());
-            matrixSum(matrixA, matrixB, mtrxsCmps->suma, SIZEM);
+            matrixSum(matrixA, matrixB, mtrxsBin->suma, SIZEM);
+            signalSem(semid, 0);
             printf("Suma de matrices\n");
-            imprimirMatriz(mtrxsCmps->suma, SIZEM);
+            imprimirMatriz(mtrxsBin->suma, SIZEM);
             
             exit(0);
         }
@@ -290,9 +349,10 @@ void ejecutar(){
         {
             printf("RESTA\n");
             printf("Proceso %d Padre %d \n", getpid(), getppid());
-            matrixSubs(matrixA, matrixB, mtrxsCmps->resta, SIZEM);
+            matrixSubs(matrixA, matrixB, mtrxsBin->resta, SIZEM);
+            signalSem(semid, 1);
             printf("Resta de matrices\n");
-            imprimirMatriz(mtrxsCmps->resta, SIZEM);
+            imprimirMatriz(mtrxsBin->resta, SIZEM);
             exit(0);
         }
 
@@ -302,9 +362,10 @@ void ejecutar(){
         {
             printf("MULT\n");
             printf("Proceso %d Padre %d \n", getpid(), getppid());
-            matrixMult(matrixA, matrixB, mtrxsCmps->multiplicacion, SIZEM);
+            matrixMult(matrixA, matrixB, mtrxsBin->multiplicacion, SIZEM);
+            signalSem(semid, 2);
             printf("Multiplicacion de matrices\n");
-            imprimirMatriz(mtrxsCmps->multiplicacion, SIZEM);
+            imprimirMatriz(mtrxsBin->multiplicacion, SIZEM);
             exit(0);
         }
 
@@ -314,12 +375,13 @@ void ejecutar(){
         {
             printf("Traspuesta\n");
             printf("Proceso %d Padre %d \n", getpid(), getppid());
-            obtenerTraspuesta(matrixA, mtrxsCmps->traspuestaA, SIZEM);
-            obtenerTraspuesta(matrixA, mtrxsCmps->traspuestaB, SIZEM);
+            obtenerTraspuesta(matrixA, mtrxsUn->traspuestaA, SIZEM);
+            obtenerTraspuesta(matrixB, mtrxsUn->traspuestaB, SIZEM);
+            signalSem(semid, 3);
             printf("Traspuesta de matriz A\n");
-            imprimirMatriz(mtrxsCmps->traspuestaA, SIZEM);
+            imprimirMatriz(mtrxsUn->traspuestaA, SIZEM);
             printf("Traspuesta de matriz B\n");
-            imprimirMatriz(mtrxsCmps->traspuestaB, SIZEM);
+            imprimirMatriz(mtrxsUn->traspuestaB, SIZEM);
             exit(0);
         }
         
@@ -329,15 +391,22 @@ void ejecutar(){
         {
             printf("Inversa\n");
             printf("Proceso %d Padre %d \n", getpid(), getppid());
-            obtenerInversa(matrixA, mtrxsCmps->inversaA, SIZEM);
-            obtenerInversa(matrixB, mtrxsCmps->inversaB, SIZEM);
+            obtenerInversa(matrixA, mtrxsUn->inversaA, SIZEM);
+            obtenerInversa(matrixB, mtrxsUn->inversaB, SIZEM);
+            signalSem(semid, 4);
             printf("Inversa de matriz A\n");
-            imprimirMatrizFloat(mtrxsCmps->inversaA, SIZEM);
+            imprimirMatrizFloat(mtrxsUn->inversaA, SIZEM);
             printf("Inversa de matriz B\n");
-            imprimirMatrizFloat(mtrxsCmps->inversaB, SIZEM);
+            imprimirMatrizFloat(mtrxsUn->inversaB, SIZEM);
             exit(0);
         }
 
+        //esperar a que todos los semaforos indiquen que funciona
+        waitSem(semid, 0);
+        waitSem(semid, 1);
+        waitSem(semid, 2);
+        waitSem(semid, 3);
+        waitSem(semid, 4);
 
         waitpid(ps,NULL,0);
         waitpid(pr,NULL,0);
@@ -349,32 +418,35 @@ void ejecutar(){
         printf("Proceso %d Padre %d \n", getpid(), getppid());
 
 
-         FILE *archivo = fopen("opMtrxShm.txt", "w");
+         FILE *archivo = fopen("opMtrxShmSem.txt", "w");
 
-        escribirMatrizArchivo(archivo,"\nSuma de matrices\n",mtrxsCmps->suma, SIZEM);
+        escribirMatrizArchivo(archivo,"\nSuma de matrices\n",mtrxsBin->suma, SIZEM);
         printf("Escribiendo suma de matrices en archivo!\n");
 
-        escribirMatrizArchivo(archivo,"\nResta de matrices\n",mtrxsCmps->resta, SIZEM);
+        escribirMatrizArchivo(archivo,"\nResta de matrices\n",mtrxsBin->resta, SIZEM);
         printf("Escribiendo resta de matrices en archivo!\n");
 
-        escribirMatrizArchivo(archivo,"\nMultiplicacion de matrices\n",mtrxsCmps->multiplicacion, SIZEM);
+        escribirMatrizArchivo(archivo,"\nMultiplicacion de matrices\n",mtrxsBin->multiplicacion, SIZEM);
         printf("Escribiendo multiplicacion de matrices en archivo!\n");
 
-        escribirMatrizArchivo(archivo,"\nTraspuesta de matriz A\n",mtrxsCmps->traspuestaA, SIZEM);
+        escribirMatrizArchivo(archivo,"\nTraspuesta de matriz A\n",mtrxsUn->traspuestaA, SIZEM);
         printf("Escribiendo traspuesta de A en archivo!\n");
 
-        escribirMatrizArchivo(archivo,"\nTraspuesta de matriz B\n",mtrxsCmps->traspuestaB, SIZEM);
+        escribirMatrizArchivo(archivo,"\nTraspuesta de matriz B\n",mtrxsUn->traspuestaB, SIZEM);
         printf("Escribiendo traspuesta de B en archivo!\n");
 
-        escribirMatrizArchivoFloat(archivo,"\nInversa de matriz A\n",mtrxsCmps->inversaA, SIZEM);
+        escribirMatrizArchivoFloat(archivo,"\nInversa de matriz A\n",mtrxsUn->inversaA, SIZEM);
         printf("Escribiendo inversa de A en archivo!\n");
 
-        escribirMatrizArchivoFloat(archivo,"\nInversa de matriz B\n",mtrxsCmps->inversaB, SIZEM);
+        escribirMatrizArchivoFloat(archivo,"\nInversa de matriz B\n",mtrxsUn->inversaB, SIZEM);
         printf("Escribiendo inversa de B en archivo!\n");
-
+        
+        semctl(semid, 0, IPC_RMID);
         fclose(archivo);
-        shmdt(mtrxsCmps);
-        shmctl(shmidMtrx, IPC_RMID, NULL);
+        shmdt(mtrxsBin);
+        shmctl(shmBin, IPC_RMID, NULL);
+        shmdt(mtrxsUn);
+        shmctl(shmUn, IPC_RMID, NULL);
 
 
         exit(0);
