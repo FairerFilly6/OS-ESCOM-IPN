@@ -6,6 +6,7 @@
 #include <sys/ipc.h> 
 #include <sys/shm.h>
 #include <string.h>
+#include <sys/sem.h>
 
 #define SIZEM 10
 
@@ -20,7 +21,6 @@ typedef struct {
 
     int suma[SIZEM][SIZEM];
     int multiplicacion[SIZEM][SIZEM];
-
 
 } MatricesResultantes;
 
@@ -248,10 +248,42 @@ int obtenerInversa(int matrix[][SIZEM],
     return 1;
 }
 
+void waitSem(int semid, int num)
+{
+    struct sembuf op;
+
+    op.sem_num = num;
+    op.sem_op = -1;
+    op.sem_flg = 0;
+
+    semop(semid, &op, 1);
+}
+
+void signalSem(int semid, int num)
+{
+    struct sembuf op;
+
+    op.sem_num = num;
+    op.sem_op = 1;
+    op.sem_flg = 0;
+
+    semop(semid, &op, 1);
+}
 
 
 void ejecutar(){
     pid_t ph, pn ;
+
+    int semid;
+
+    semid = semget(
+        IPC_PRIVATE,
+        2,
+        IPC_CREAT | 0666
+    );
+
+    semctl(semid, 0, SETVAL, 0);
+    semctl(semid, 1, SETVAL, 0);
 
     
     int matrixA[SIZEM][SIZEM] = {   {1,0,0,0,0,0,0,0,0,0}, 
@@ -332,16 +364,25 @@ void ejecutar(){
            printf("Proceso %d Padre %d \n", getpid(), getppid());
            printf("deberia ser el nieto\n");
 
-            //obtener la inversa de A+B y escribir en inversaSuma
-            obtenerInversa(mtrxsCmps->suma, mtrxsCmps->inversaSuma, SIZEM);
+            int matrixANieto[SIZEM][SIZEM];
+            int matrixBNieto[SIZEM][SIZEM];
 
+            //recibir matrices
+            memcpy(matrixANieto, mtrxsOrig->matrixA,  sizeof(matrixANieto));
+            memcpy(matrixBNieto, mtrxsOrig->matrixB,  sizeof(matrixANieto));
+
+            //obtener suma y mandarla a app
+            matrixSum(matrixANieto, matrixBNieto, mtrxsRes->suma, SIZEM);
+            //habilitar el semaforo para leer suma
+            signalSem(semid, 0);
+
+            
             printf("Lectura de matrices desde memoria compartida desde nieto\n");
-            imprimirMatriz(mtrxsCmps->matrixA, SIZEM);
-            imprimirMatriz(mtrxsCmps->matrixB, SIZEM);
+            imprimirMatriz(matrixANieto, SIZEM);
+            imprimirMatriz(matrixBNieto, SIZEM);
 
-            printf("Inversa de A + B\n");
-            imprimirMatrizFloat(mtrxsCmps->inversaSuma, SIZEM);
-
+            
+            exit(0);
             
             
 
@@ -349,26 +390,32 @@ void ejecutar(){
             printf("Proceso %d Padre %d \n", getpid(), getppid());
             printf("deberia ser el hijo\n");
 
+            int matrixAHijo[SIZEM][SIZEM];
+            int matrixBHijo[SIZEM][SIZEM];
+
+            memcpy( matrixAHijo, mtrxsOrig->matrixA,  sizeof(matrixAHijo));
+            memcpy( matrixBHijo, mtrxsOrig->matrixB,  sizeof(matrixAHijo));
+
             //obtenemos la suma y escribimos en suma
-            matrixSum(mtrxsCmps->matrixA, mtrxsCmps->matrixB,mtrxsCmps->suma,SIZEM);
-
-            //obtener la inversa de A X B y escribir en inversaMult
-            obtenerInversa(mtrxsCmps->multiplicacion, mtrxsCmps->inversaMult, SIZEM);
-           
-           
+            //mandar la matriz a padre
+            matrixMult(matrixAHijo , matrixBHijo , mtrxsRes->multiplicacion ,SIZEM);
+            //habilitar el semaforo para leer multiplicacion
+            signalSem(semid, 1);
+     
             printf("Lectura de matrices desde memoria compartida desde hijo\n");
-            imprimirMatriz(mtrxsCmps->matrixA, SIZEM);
-            imprimirMatriz(mtrxsCmps->matrixB, SIZEM);
-            printf("Suma de A + B\n");
-            imprimirMatriz(mtrxsCmps->suma, SIZEM);
+            imprimirMatriz(mtrxsOrig->matrixA, SIZEM);
+            imprimirMatriz(mtrxsOrig->matrixB, SIZEM);
+            printf("Multiplicacion de A * B\n");
+            imprimirMatriz(mtrxsRes->multiplicacion, SIZEM);
 
-            printf("Inversa de A X B\n");
-            imprimirMatrizFloat(mtrxsCmps->inversaMult, SIZEM);
+            //mandar matrices a nieto
+            memcpy( matrixAHijo ,mtrxsOrig->matrixA, sizeof(matrixAHijo));
+            memcpy( matrixBHijo, mtrxsOrig->matrixB, sizeof(matrixAHijo));
 
-            
             
 
             waitpid(pn, NULL, 0);
+            exit(0);
 
         }
 
@@ -377,45 +424,76 @@ void ejecutar(){
         printf("Proceso %d Padre %d \n", getpid(), getppid());
         printf("deberia ser app\n");
 
-        //obtenemos la multiplicacion y escribimos en multiplicacion
-        matrixMult(mtrxsCmps->matrixA, mtrxsCmps->matrixB,mtrxsCmps->multiplicacion,SIZEM);
+
+        //app debe esperar a que este lista suma y multiplicacion
+        waitSem(semid, 0);
+        waitSem(semid, 1);
+
+        //se envian por shm las matrices  a hijo
+        memcpy(matrixA, mtrxsOrig->matrixA,sizeof(matrixA));
+        memcpy(matrixB, mtrxsOrig->matrixB,sizeof(matrixB));
+       
+         //se leen las resultantes 
+
+        int sumaApp[SIZEM][SIZEM];
+        int multApp[SIZEM][SIZEM];
+
+        
+
+        memcpy(sumaApp, mtrxsRes->suma, sizeof(sumaApp));
+        memcpy(multApp, mtrxsRes->multiplicacion, sizeof(multApp));
+
+
+        // se obtienen las inversas y se escriben en la memoria
+
+        obtenerInversa(sumaApp, mtrxsInv->inversaSuma, SIZEM);
+        obtenerInversa(multApp, mtrxsInv->inversaMult, SIZEM);
+
+
+
+        printf("Resultado final de todo\n");
+        
+        printf("Suma de A + B\n");
+        imprimirMatriz(mtrxsRes->suma, SIZEM);
+
+        printf("Inversa de A + B\n");
+        imprimirMatrizFloat(mtrxsInv->inversaSuma, SIZEM);
 
         printf("Multiplicacion de A X B\n");
-        imprimirMatriz(mtrxsCmps->multiplicacion, SIZEM);
+        imprimirMatriz(mtrxsRes->multiplicacion, SIZEM);
 
-       
+        printf("Inversa de A X B\n");
+        imprimirMatrizFloat(mtrxsInv->inversaMult, SIZEM);
+
+        FILE *archivo = fopen("resultadoSem.txt", "w");
+
+        escribirMatrizArchivoFloat(archivo,"\nInversa de multiplicacion de matrices\n",mtrxsInv->inversaMult, SIZEM);
+        printf("Escribiendo matriz inversa de multiplicacion en archivo!\n");
+        escribirMatrizArchivoFloat(archivo,"\nInversa de suma de matrices\n",mtrxsInv->inversaSuma, SIZEM);
+        printf("Escribiendo matriz inversa de suma en archivo!\n");
+
+        fclose(archivo);
+        //close de la shm
+        shmdt(mtrxsRes);
+        shmctl(shmidRes, IPC_RMID, NULL);
+        shmdt(mtrxsOrig);
+        shmctl(shmidOrig, IPC_RMID, NULL);
+        shmdt(mtrxsInv);
+        shmctl(shmidInv, IPC_RMID, NULL);
+
+        //close del semaforo
+        semctl(semid, 0, IPC_RMID );
+
         
         waitpid(ph, NULL, 0);
 
         
     }
 
-    printf("Resultado final de todo\n");
+   
+
+
     
-    printf("Suma de A + B\n");
-    imprimirMatriz(mtrxsCmps->suma, SIZEM);
-
-    printf("Inversa de A + B\n");
-    imprimirMatrizFloat(mtrxsCmps->inversaSuma, SIZEM);
-
-    printf("Multiplicacion de A X B\n");
-    imprimirMatriz(mtrxsCmps->multiplicacion, SIZEM);
-
-    printf("Inversa de A X B\n");
-    imprimirMatrizFloat(mtrxsCmps->inversaMult, SIZEM);
-
-    FILE *archivo = fopen("resultadoSHM.txt", "w");
-
-    escribirMatrizArchivoFloat(archivo,"\nInversa de multiplicacion de matrices\n",mtrxsCmps->inversaMult, SIZEM);
-    printf("Escribiendo matriz inversa de multiplicacion en archivo!\n");
-    escribirMatrizArchivoFloat(archivo,"\nInversa de suma de matrices\n",mtrxsCmps->inversaSuma, SIZEM);
-    printf("Escribiendo matriz inversa de suma en archivo!\n");
-
-    fclose(archivo);
-
-    //close de la shm
-    shmdt(mtrxsCmps);
-    shmctl(shmidMtrx, IPC_RMID, NULL);
 }
 
 int main(int argc, char const *argv[])
